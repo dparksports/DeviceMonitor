@@ -26,9 +26,10 @@ A native PowerShell (WPF) application for monitoring system events and managing 
 
 ### How to Run
 
-1.  **Download** the application script `DeviceMonitorGUI.ps1`.
-2.  Open a PowerShell terminal.
-3.  Run the following command:
+1.  **Download** the release zip `DeviceMonitor.zip`.
+2.  **Extract** the contents to a folder.
+3.  Open a PowerShell terminal in that folder.
+4.  Run the following command:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\DeviceMonitorGUI.ps1
@@ -43,4 +44,4 @@ powershell -ExecutionPolicy Bypass -File .\DeviceMonitorGUI.ps1
 You can download the latest version from the [Releases Page](https://github.com/dparksports/DeviceMonitor/releases).
 
 **Direct Download (v1.0.0):**
-[DeviceMonitorGUI.ps1](https://github.com/dparksports/DeviceMonitor/releases/download/v1.0.0/DeviceMonitorGUI.ps1)
+[DeviceMonitor.zip](https://github.com/dparksports/DeviceMonitor/releases/download/v1.0.0/DeviceMonitor.zip)
