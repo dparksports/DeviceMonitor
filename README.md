@@ -9,9 +9,9 @@ A native PowerShell (WPF) application for monitoring system events and managing 
 *   **Detailed Info**: Displays Device Name, Type (e.g., HIDClass, USB), and the Initiator (Logged-on User).
 
 ### 2. Security Event Monitoring
-*   **Logon Tracking**: Monitors the Windows Security Log for Logon (4624) and Logon Failure (4625) events.
-*   **Detailed Insights**: Shows the Account Name, Activity Type (Logon/Failure), and Logon Type (Interactive, Service, Network, etc.) to help distinguish between user actions and system noise.
-*   **Polling Architecture**: Uses a robust polling mechanism to ensure stability even without initial Admin rights (though Admin is required to see data).
+*   **Complete Visibility**: Monitors **ALL** events in the Windows Security Log (not just logons).
+*   **Smart Parsing**: Automatically extracts Account Names and Activity Types (e.g., "Special Logon", "Process Creation", "Privilege Usage").
+*   **Logon Type decoding**: For logon events, it decodes the numeric type (Interactive, Service, Network, etc.) into human-readable text.
 
 ### 3. VPN Service Management
 *   **One-Click Toggle**: A Toolbar button to easily enable/disable VPN-related services.
