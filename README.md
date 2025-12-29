@@ -24,13 +24,21 @@ A native PowerShell (WPF) application for monitoring system events and managing 
 *   Windows 10/11
 *   PowerShell 5.1 (Built-in)
 
-### How to Run
+### Installation (UAC Bypass)
 
-1.  **Download** the release zip `DeviceMonitor.zip`.
-2.  **Extract** the contents to a folder.
-3.  Open a PowerShell terminal in that folder.
-4.  Run the following command:
+To run the application as Administrator without constant prompts:
 
+1.  **Download** and extract the release zip `DeviceMonitor.zip`.
+2.  Right-click `Install.ps1` and select **"Run with PowerShell"**.
+    *   *Note: You will be prompted for Admin rights once during installation.*
+3.  The installer will create a desktop shortcut.
+
+**Usage:**
+- Double-click the **"Windows System Monitor"** shortcut on your desktop.
+- It will open immediately with full privileges and no UAC prompt.
+
+### Quick Run (No Install)
+If you prefer not to install, you can still run it manually:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\DeviceMonitorGUI.ps1
 ```
