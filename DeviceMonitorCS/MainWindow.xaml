@@ -41,6 +41,11 @@
             <!-- Top Pane: Device Events -->
             <GroupBox Grid.Row="0" Header="Device Events" Padding="5" Margin="5">
                 <DataGrid x:Name="DeviceGrid">
+                    <DataGrid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Ask AI about this" Click="AskAi_Click"/>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="80"/>
                         <DataGridTextColumn Header="Event" Binding="{Binding EventType}" Width="80"/>
@@ -57,6 +62,11 @@
             <!-- Middle Pane: Security Events -->
             <GroupBox Grid.Row="2" Header="Security Events" Padding="5" Margin="5">
                 <DataGrid x:Name="SecurityGrid">
+                    <DataGrid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Ask AI about this" Click="AskAi_Click"/>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="80"/>
                         <DataGridTextColumn Header="EventID" Binding="{Binding Id}" Width="60"/>

@@ -47,6 +47,7 @@
                         <ContextMenu>
                             <MenuItem Header="Mute This Connection" x:Name="MuteActiveCtx"/>
                             <MenuItem Header="Copy Remote IP" x:Name="CopyActiveIpCtx"/>
+                            <MenuItem Header="Ask AI about this" Click="AskAi_Click"/>
                         </ContextMenu>
                     </DataGrid.ContextMenu>
                 </DataGrid>
@@ -69,6 +70,7 @@
                         <ContextMenu>
                              <MenuItem Header="Mute This Connection" x:Name="MuteHistoryCtx"/>
                              <MenuItem Header="Copy Remote IP" x:Name="CopyHistoryIpCtx"/>
+                             <MenuItem Header="Ask AI about this" Click="AskAi_Click"/>
                         </ContextMenu>
                     </DataGrid.ContextMenu>
                 </DataGrid>
@@ -86,6 +88,7 @@
                         <ListBox.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Unmute" x:Name="UnmuteCtx"/>
+                                <MenuItem Header="Ask AI about this" Click="AskAi_Click"/>
                             </ContextMenu>
                         </ListBox.ContextMenu>
                     </ListBox>

@@ -27,6 +27,11 @@
         <!-- Tasks Grid -->
         <GroupBox DockPanel.Dock="Top" Header="Scheduled Tasks Running as Admin" Padding="5" Margin="5">
             <DataGrid x:Name="TasksGrid" SelectionMode="Single">
+                <DataGrid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Ask AI about this" Click="AskAi_Click"/>
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Task Name" Binding="{Binding TaskName}" Width="250"/>
                     <DataGridTextColumn Header="State" Binding="{Binding State}" Width="80"/>

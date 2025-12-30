@@ -185,5 +185,19 @@ namespace DeviceMonitorCS
                 }
             }
         }
+
+        private void AskAi_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as System.Windows.Controls.MenuItem;
+            var contextMenu = menuItem.Parent as System.Windows.Controls.ContextMenu;
+            var grid = contextMenu.PlacementTarget as System.Windows.Controls.DataGrid;
+
+            if (grid != null && grid.SelectedItem != null)
+            {
+                var window = new AskAiWindow(grid.SelectedItem);
+                window.Owner = this;
+                window.ShowDialog();
+            }
+        }
     }
 }

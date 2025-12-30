@@ -76,5 +76,23 @@ namespace DeviceMonitorCS
                  Clipboard.SetText(item.RemoteAddress);
              }
         }
+
+        private void AskAi_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as System.Windows.Controls.MenuItem;
+            var contextMenu = menuItem.Parent as System.Windows.Controls.ContextMenu;
+            // Handle both DataGrid and ListBox
+            object selectedItem = null;
+
+            if (contextMenu.PlacementTarget is DataGrid grid) selectedItem = grid.SelectedItem;
+            else if (contextMenu.PlacementTarget is ListBox list) selectedItem = list.SelectedItem;
+
+            if (selectedItem != null)
+            {
+                var window = new AskAiWindow(selectedItem);
+                window.Owner = this;
+                window.ShowDialog();
+            }
+        }
     }
 }
