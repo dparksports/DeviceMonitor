@@ -34,6 +34,19 @@ A native PowerShell (WPF) application for monitoring system events and managing 
     *   **Refresh**: Update the task list to show current status
 *   **Task Details**: View task name, state (Ready, Running, Disabled), action (command being executed), and user account.
 
+### 6. Network Adapters Manager
+*   **Dedicated Window**: Click the "Network Adapters" button to view and manage network interfaces.
+*   **Comprehensive List**: View all network adapters with details including Name, Description, Status, MAC Address, and Interface Type.
+*   **Uninstall Capability**: Easily uninstall stubborn or problematic virtual adapters directly from the toolbar:
+    *   **Microsoft WiFi Direct Virtual Adapter**: Often causes issues with hotspots.
+    *   **WAN Miniport**: Uninstall all WAN Miniports at once to reset network stack.
+    *   **Bluetooth PAN**: Remove Bluetooth Personal Area Network devices.
+    *   **Intel WiFi 6E AX210**: Specific target for Intel AX210 driver reset.
+*   **Safety Features**: 
+    *   Confirmation dialogs before any uninstall action.
+    *   Reports success/failure counts.
+    *   Automatic list refresh after operations.
+
 ## Usage
 
 ### Prerequisites
@@ -67,5 +80,5 @@ powershell -ExecutionPolicy Bypass -File .\DeviceMonitorGUI.ps1
 
 You can download the latest version from the [Releases Page](https://github.com/dparksports/DeviceMonitor/releases).
 
-**Direct Download (v1.2.0):**
-[DeviceMonitor.zip](https://github.com/dparksports/DeviceMonitor/releases/download/v1.2.0/DeviceMonitor.zip)
+**Direct Download (v1.3.0):**
+[DeviceMonitor.zip](https://github.com/dparksports/DeviceMonitor/releases/download/v1.3.0/DeviceMonitor.zip)
