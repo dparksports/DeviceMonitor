@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -174,9 +175,11 @@ namespace DeviceMonitorCS.Models
 
         private string Key(ConnectionItem c) => $"{c.Protocol}:{c.LocalAddress}->{c.RemoteAddress}:{c.Pid}";
 
+        private static readonly HttpClient _httpClient = new HttpClient();
+
         private void ResolveWhoIs(ConnectionItem item)
         {
-            if (item.RemoteAddress == "127.0.0.1" || item.RemoteAddress == "0.0.0.0" || item.RemoteAddress == "::" || item.RemoteAddress.StartsWith("192.168."))
+            if (IsLocalIp(item.RemoteAddress))
             {
                 item.WhoIs = "Local/LAN";
                 return;
@@ -188,10 +191,22 @@ namespace DeviceMonitorCS.Models
                 return;
             }
 
-            Task.Run(() =>
+            item.WhoIs = "Resolving...";
+            
+            Task.Run(async () =>
             {
                 try
                 {
+                    // Try IPInfo first for rich data
+                    string info = await GetIpInfoAsync(item.RemoteAddress);
+                    if (!string.IsNullOrEmpty(info))
+                    {
+                        item.WhoIs = info;
+                        _whoIsCache[item.RemoteAddress] = info;
+                        return;
+                    }
+
+                    // Fallback to DNS
                     var entry = Dns.GetHostEntry(item.RemoteAddress);
                     item.WhoIs = entry.HostName;
                     _whoIsCache[item.RemoteAddress] = entry.HostName;
@@ -202,6 +217,42 @@ namespace DeviceMonitorCS.Models
                     _whoIsCache[item.RemoteAddress] = "Unknown";
                 }
             });
+        }
+
+        private async Task<string> GetIpInfoAsync(string ip)
+        {
+            try
+            {
+                // Unauthenticated rate limits apply (approx 50k/month free)
+                string json = await _httpClient.GetStringAsync($"https://ipinfo.io/{ip}/json");
+                using (JsonDocument doc = JsonDocument.Parse(json))
+                {
+                    JsonElement root = doc.RootElement;
+                    string org = root.TryGetProperty("org", out var o) ? o.GetString() : "";
+                    string city = root.TryGetProperty("city", out var c) ? c.GetString() : "";
+                    string country = root.TryGetProperty("country", out var cn) ? cn.GetString() : "";
+                    string hostname = root.TryGetProperty("hostname", out var h) ? h.GetString() : "";
+
+                    // Format: "AS15169 Google LLC" or "Comcast Cable"
+                    if (!string.IsNullOrEmpty(org))
+                    {
+                        // Clean up AS number if present "AS1234 Name" -> "Name" if desired, but AS is useful
+                        return $"{org} ({country})"; 
+                    }
+                    if (!string.IsNullOrEmpty(hostname) && hostname != ip) return hostname;
+                    
+                    return "";
+                }
+            }
+            catch 
+            {
+                return "";
+            }
+        }
+
+        private bool IsLocalIp(string ip)
+        {
+             return ip == "127.0.0.1" || ip == "0.0.0.0" || ip == "::" || ip.StartsWith("192.168.") || ip.StartsWith("10.") || ip.StartsWith("172.16.");
         }
 
         private IEnumerable<ConnectionItem> GetTcpConnections()
