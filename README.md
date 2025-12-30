@@ -82,5 +82,5 @@ A native .NET 6+ WPF application for monitoring system events and managing VPN s
 
 You can download the latest version from the [Releases Page](https://github.com/dparksports/DeviceMonitor/releases).
 
-**Direct Download (v1.8.0):**
-[DeviceMonitorCS.zip](https://github.com/dparksports/DeviceMonitor/releases/download/v1.8.0/DeviceMonitorCS.zip)
+**Direct Download (v1.9.0):**
+[DeviceMonitorCS.zip](https://github.com/dparksports/DeviceMonitor/releases/download/v1.9.0/DeviceMonitorCS.zip)
