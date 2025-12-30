@@ -1,0 +1,332 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace DeviceMonitorCS.Models
+{
+    public class ConnectionItem
+    {
+        public string Protocol { get; set; }
+        public string LocalAddress { get; set; }
+        public string RemoteAddress { get; set; }
+        public string State { get; set; }
+        public string ProcessName { get; set; }
+        public int Pid { get; set; }
+        public string WhoIs { get; set; } = "Resolving...";
+        public DateTime StartTime { get; set; }
+        public DateTime LastSeen { get; set; }
+        public string Duration => (LastSeen - StartTime).ToString(@"hh\:mm\:ss");
+        public string DataTransferred { get; set; } = "-"; // Not easily available via basic TCP table
+    }
+
+    public class ConnectionMonitor
+    {
+        public ObservableCollection<ConnectionItem> ActiveConnections { get; set; } = new ObservableCollection<ConnectionItem>();
+        public ObservableCollection<ConnectionItem> HistoricalConnections { get; set; } = new ObservableCollection<ConnectionItem>();
+        public ObservableCollection<string> MutedConnections { get; set; } = new ObservableCollection<string>();
+
+        private readonly string _historyFile = "connection_history.json";
+        private readonly string _mutedFile = "muted_connections.json";
+
+        // Cache for Process Names and WhoIs to avoid spamming
+        private ConcurrentDictionary<int, string> _processCache = new ConcurrentDictionary<int, string>();
+        private ConcurrentDictionary<string, string> _whoIsCache = new ConcurrentDictionary<string, string>();
+
+        public ConnectionMonitor()
+        {
+            LoadPersistence();
+        }
+
+        public void SavePersistence()
+        {
+            try
+            {
+                var historyData = JsonSerializer.Serialize(HistoricalConnections);
+                File.WriteAllText(_historyFile, historyData);
+
+                var mutedData = JsonSerializer.Serialize(MutedConnections);
+                File.WriteAllText(_mutedFile, mutedData);
+            }
+            catch (Exception ex) 
+            {
+                Debug.WriteLine($"Failed to save persistence: {ex.Message}");
+            }
+        }
+
+        private void LoadPersistence()
+        {
+            try
+            {
+                if (File.Exists(_historyFile))
+                {
+                    var invalidJson = File.ReadAllText(_historyFile);
+                    var list = JsonSerializer.Deserialize<List<ConnectionItem>>(invalidJson);
+                    if (list != null)
+                    {
+                        foreach (var item in list) HistoricalConnections.Add(item);
+                    }
+                }
+
+                if (File.Exists(_mutedFile))
+                {
+                    var list = JsonSerializer.Deserialize<List<string>>(File.ReadAllText(_mutedFile));
+                    if (list != null)
+                    {
+                        foreach (var item in list) MutedConnections.Add(item);
+                    }
+                }
+            }
+            catch { }
+        }
+
+        public void MuteConnection(ConnectionItem item)
+        {
+            string key = $"{item.RemoteAddress}"; // Mute by IP
+            if (!MutedConnections.Contains(key))
+            {
+                MutedConnections.Add(key);
+                SavePersistence();
+            }
+        }
+
+        public void UnmuteConnection(string ip)
+        {
+            if (MutedConnections.Contains(ip))
+            {
+                MutedConnections.Remove(ip);
+                SavePersistence();
+            }
+        }
+
+        public void ClearHistory()
+        {
+            HistoricalConnections.Clear();
+            SavePersistence();
+        }
+
+        public void RefreshConnections()
+        {
+            var currentSnapshot = new List<ConnectionItem>();
+            currentSnapshot.AddRange(GetTcpConnections());
+            currentSnapshot.AddRange(GetUdpConnections());
+
+            // Merge with Active
+            // We need to keep StartTime for existing connections
+            // Remove those not in snapshot
+            
+            var snapshotKeys = new HashSet<string>(currentSnapshot.Select(Key));
+
+            // Remove dead
+            var toRemove = ActiveConnections.Where(c => !snapshotKeys.Contains(Key(c))).ToList();
+            foreach (var item in toRemove)
+            {
+                ActiveConnections.Remove(item);
+                // Move to History if not muted
+                if (!IsMuted(item))
+                {
+                    // Avoid duplicates in history? User wants log.
+                    // Let's add if not recently added? Or just add.
+                    // Ideally we update the "LastSeen" of the history item if it exists?
+                    // "Historical connections" usually means "closed connections".
+                    item.State = "Closed";
+                    HistoricalConnections.Insert(0, item);
+                    if (HistoricalConnections.Count > 1000) HistoricalConnections.RemoveAt(HistoricalConnections.Count - 1);
+                }
+            }
+
+            // Add/Update
+            foreach (var item in currentSnapshot)
+            {
+                if (IsMuted(item)) continue;
+
+                var existing = ActiveConnections.FirstOrDefault(c => Key(c) == Key(item));
+                if (existing != null)
+                {
+                    existing.LastSeen = DateTime.Now;
+                    existing.State = item.State;
+                    // Trigger property change if bound mechanism supports it (ObservableCollection doesn't deep watch)
+                    // We might need to implement INotifyPropertyChanged on ConnectionItem for live UI updates
+                }
+                else
+                {
+                    item.StartTime = DateTime.Now;
+                    item.LastSeen = DateTime.Now;
+                    ResolveWhoIs(item); // Async resolution
+                    ActiveConnections.Add(item);
+                }
+            }
+            
+            SavePersistence(); // Maybe too frequent? Save on close instead?
+        }
+
+        private bool IsMuted(ConnectionItem item)
+        {
+            return MutedConnections.Contains(item.RemoteAddress);
+        }
+
+        private string Key(ConnectionItem c) => $"{c.Protocol}:{c.LocalAddress}->{c.RemoteAddress}:{c.Pid}";
+
+        private void ResolveWhoIs(ConnectionItem item)
+        {
+            if (item.RemoteAddress == "127.0.0.1" || item.RemoteAddress == "0.0.0.0" || item.RemoteAddress == "::" || item.RemoteAddress.StartsWith("192.168."))
+            {
+                item.WhoIs = "Local/LAN";
+                return;
+            }
+
+            if (_whoIsCache.TryGetValue(item.RemoteAddress, out string val))
+            {
+                item.WhoIs = val;
+                return;
+            }
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    var entry = Dns.GetHostEntry(item.RemoteAddress);
+                    item.WhoIs = entry.HostName;
+                    _whoIsCache[item.RemoteAddress] = entry.HostName;
+                }
+                catch
+                {
+                    item.WhoIs = "Unknown";
+                    _whoIsCache[item.RemoteAddress] = "Unknown";
+                }
+            });
+        }
+
+        private IEnumerable<ConnectionItem> GetTcpConnections()
+        {
+            var buffer = IntPtr.Zero;
+            int size = 0;
+            // Get size
+            uint result = IpHlpApi.GetExtendedTcpTable(IntPtr.Zero, ref size, true, IpHlpApi.AF_INET, IpHlpApi.TCP_TABLE_CLASS.TCP_TABLE_OWNER_PID_ALL);
+            
+            buffer = Marshal.AllocHGlobal(size);
+            try
+            {
+                result = IpHlpApi.GetExtendedTcpTable(buffer, ref size, true, IpHlpApi.AF_INET, IpHlpApi.TCP_TABLE_CLASS.TCP_TABLE_OWNER_PID_ALL);
+                if (result != 0) return Enumerable.Empty<ConnectionItem>();
+
+                var table = Marshal.PtrToStructure<IpHlpApi.MIB_TCPTABLE_OWNER_PID>(buffer);
+                int rowSize = Marshal.SizeOf<IpHlpApi.MIB_TCPROW_OWNER_PID>();
+                IntPtr currentRow = buffer + Marshal.SizeOf<uint>(); // skip dwNumEntries
+
+                var list = new List<ConnectionItem>();
+                for (int i = 0; i < table.dwNumEntries; i++)
+                {
+                    var row = Marshal.PtrToStructure<IpHlpApi.MIB_TCPROW_OWNER_PID>(currentRow);
+                    
+                    string local = IPToString(row.localAddr) + ":" + PortToString(row.localPort);
+                    string remote = IPToString(row.remoteAddr); 
+                    // Remote Port? Struct has it.
+                    
+                    list.Add(new ConnectionItem
+                    {
+                        Protocol = "TCP",
+                        LocalAddress = local,
+                        RemoteAddress = remote,
+                        State = ((TcpState)row.state).ToString(),
+                        ProcessName = GetProcessName((int)row.owningPid),
+                        Pid = (int)row.owningPid
+                    });
+
+                    currentRow += rowSize;
+                }
+                return list;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+            }
+        }
+
+        private IEnumerable<ConnectionItem> GetUdpConnections()
+        {
+             var buffer = IntPtr.Zero;
+            int size = 0;
+            // Get size
+            uint result = IpHlpApi.GetExtendedUdpTable(IntPtr.Zero, ref size, true, IpHlpApi.AF_INET, IpHlpApi.UDP_TABLE_CLASS.UDP_TABLE_OWNER_PID);
+            
+            buffer = Marshal.AllocHGlobal(size);
+            try
+            {
+                result = IpHlpApi.GetExtendedUdpTable(buffer, ref size, true, IpHlpApi.AF_INET, IpHlpApi.UDP_TABLE_CLASS.UDP_TABLE_OWNER_PID);
+                if (result != 0) return Enumerable.Empty<ConnectionItem>();
+
+                var table = Marshal.PtrToStructure<IpHlpApi.MIB_UDPTABLE_OWNER_PID>(buffer);
+                int rowSize = Marshal.SizeOf<IpHlpApi.MIB_UDPROW_OWNER_PID>();
+                IntPtr currentRow = buffer + Marshal.SizeOf<uint>(); 
+
+                var list = new List<ConnectionItem>();
+                for (int i = 0; i < table.dwNumEntries; i++)
+                {
+                    var row = Marshal.PtrToStructure<IpHlpApi.MIB_UDPROW_OWNER_PID>(currentRow);
+                    
+                    string local = IPToString(row.localAddr) + ":" + PortToString(row.localPort);
+                    
+                    list.Add(new ConnectionItem
+                    {
+                        Protocol = "UDP",
+                        LocalAddress = local,
+                        RemoteAddress = "-", // UDP is connectionless
+                        State = "Listening",
+                        ProcessName = GetProcessName((int)row.owningPid),
+                        Pid = (int)row.owningPid
+                    });
+
+                    currentRow += rowSize;
+                }
+                return list;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+            }
+        }
+
+        private string IPToString(uint ip)
+        {
+            return new IPAddress(BitConverter.GetBytes(ip)).ToString();
+        }
+
+        private string PortToString(byte[] port)
+        {
+            // Port is network byte order (Big Endian)?
+            // Actually API returns it in network byte order usually
+            if (BitConverter.IsLittleEndian)
+                return ((port[0] << 8) | port[1]).ToString();
+            else
+                return ((port[1] << 8) | port[0]).ToString();
+        }
+
+        private string GetProcessName(int pid)
+        {
+            if (pid == 0) return "System Idle";
+            if (pid == 4) return "System";
+
+            if (_processCache.TryGetValue(pid, out string name)) return name;
+
+            try
+            {
+                var p = Process.GetProcessById(pid);
+                name = p.ProcessName;
+                _processCache[pid] = name;
+                return name;
+            }
+            catch 
+            {
+                return $"PID {pid}";
+            }
+        }
+    }
+}

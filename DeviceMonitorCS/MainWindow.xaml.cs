@@ -62,6 +62,7 @@ namespace DeviceMonitorCS
             ClearBtn.Click += (s, e) => { DeviceData.Clear(); SecurityData.Clear(); };
             TasksBtn.Click += (s, e) => new TasksWindow().Show();
             NetworkAdaptersBtn.Click += (s, e) => new NetworkAdaptersWindow().Show();
+            ConnectionsBtn.Click += (s, e) => new ConnectionsWindow().Show();
 
             // Wire Toggles
             VpnToggle.Click += VpnToggle_Click;

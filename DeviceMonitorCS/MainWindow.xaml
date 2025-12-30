@@ -26,6 +26,8 @@
                 <Button x:Name="TasksBtn" Content="Scheduled Tasks" Margin="5"/>
                 <Separator/>
                 <Button x:Name="NetworkAdaptersBtn" Content="Network Adapters" Margin="5"/>
+                <Separator/>
+                <Button x:Name="ConnectionsBtn" Content="Connections" Margin="5"/>
             </ToolBar>
         </ToolBarTray>
 
