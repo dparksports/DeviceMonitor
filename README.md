@@ -51,6 +51,8 @@ A native .NET 6+ WPF application for monitoring system events and managing VPN s
 *   **Dedicated Window**: Click the "Connections" button to monitor active TCP/UDP connections.
 *   **Active Monitoring**: Real-time list of connections with Process Name, PID, Local/Remote Address, and State.
 *   **Who Is**: Automatically resolves external IP addresses to **Organization** and **Country** via `ipinfo.io` (e.g., `Google LLC (US)`).
+    *   **Smart Throttling**: Lookups are rate-limited (1 per 3s) to respect API limits.
+    *   **Caching**: Results are cached to disk (`ip_cache.json`) for instant future lookups.
 *   **Historical Log**: Keeps track of closed connections, perfect for catching short-lived processes or malware beacons.
 *   **Mute Function**: Right-click to "Mute" known safe connections (like Localhost or trusted servers) to declutter the view.
 *   **Muted Management**: Review muted IPs in a dedicated tab and unmute them if needed.
@@ -72,5 +74,5 @@ A native .NET 6+ WPF application for monitoring system events and managing VPN s
 
 You can download the latest version from the [Releases Page](https://github.com/dparksports/DeviceMonitor/releases).
 
-**Direct Download (v1.6.0):**
-[DeviceMonitor.zip](https://github.com/dparksports/DeviceMonitor/releases/download/v1.6.0/DeviceMonitor.zip)
+**Direct Download (v1.6.1):**
+[DeviceMonitor.zip](https://github.com/dparksports/DeviceMonitor/releases/download/v1.6.1/DeviceMonitor.zip)

@@ -13,19 +13,25 @@ using System.Threading.Tasks;
 
 namespace DeviceMonitorCS.Models
 {
-    public class ConnectionItem
+    public class ConnectionItem : System.ComponentModel.INotifyPropertyChanged
     {
+        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+        private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
+
         public string Protocol { get; set; }
         public string LocalAddress { get; set; }
         public string RemoteAddress { get; set; }
-        public string State { get; set; }
+        private string _state;
+        public string State { get { return _state; } set { _state = value; OnPropertyChanged(nameof(State)); } }
         public string ProcessName { get; set; }
         public int Pid { get; set; }
-        public string WhoIs { get; set; } = "Resolving...";
+        private string _whoIs = "Resolving...";
+        public string WhoIs { get { return _whoIs; } set { _whoIs = value; OnPropertyChanged(nameof(WhoIs)); } }
         public DateTime StartTime { get; set; }
-        public DateTime LastSeen { get; set; }
+        private DateTime _lastSeen;
+        public DateTime LastSeen { get { return _lastSeen; } set { _lastSeen = value; OnPropertyChanged(nameof(LastSeen)); OnPropertyChanged(nameof(Duration)); } }
         public string Duration => (LastSeen - StartTime).ToString(@"hh\:mm\:ss");
-        public string DataTransferred { get; set; } = "-"; // Not easily available via basic TCP table
+        public string DataTransferred { get; set; } = "-"; 
     }
 
     public class ConnectionMonitor
@@ -36,14 +42,22 @@ namespace DeviceMonitorCS.Models
 
         private readonly string _historyFile = "connection_history.json";
         private readonly string _mutedFile = "muted_connections.json";
+        private readonly string _ipCacheFile = "ip_cache.json";
 
         // Cache for Process Names and WhoIs to avoid spamming
         private ConcurrentDictionary<int, string> _processCache = new ConcurrentDictionary<int, string>();
         private ConcurrentDictionary<string, string> _whoIsCache = new ConcurrentDictionary<string, string>();
+        
+        // Throttling
+        private ConcurrentQueue<string> _lookupQueue = new ConcurrentQueue<string>();
+        private HashSet<string> _queuedIps = new HashSet<string>();
+        private Task _processingTask;
+        private readonly object _queueLock = new object();
 
         public ConnectionMonitor()
         {
             LoadPersistence();
+            _processingTask = Task.Run(ProcessLookups);
         }
 
         public void SavePersistence()
@@ -55,6 +69,9 @@ namespace DeviceMonitorCS.Models
 
                 var mutedData = JsonSerializer.Serialize(MutedConnections);
                 File.WriteAllText(_mutedFile, mutedData);
+                
+                var ipData = JsonSerializer.Serialize(_whoIsCache);
+                File.WriteAllText(_ipCacheFile, ipData);
             }
             catch (Exception ex) 
             {
@@ -82,6 +99,15 @@ namespace DeviceMonitorCS.Models
                     if (list != null)
                     {
                         foreach (var item in list) MutedConnections.Add(item);
+                    }
+                }
+
+                if (File.Exists(_ipCacheFile))
+                {
+                    var cache = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(_ipCacheFile));
+                    if (cache != null)
+                    {
+                        _whoIsCache = new ConcurrentDictionary<string, string>(cache);
                     }
                 }
             }
@@ -193,30 +219,70 @@ namespace DeviceMonitorCS.Models
 
             item.WhoIs = "Resolving...";
             
-            Task.Run(async () =>
+            lock (_queueLock)
             {
-                try
+                if (!_queuedIps.Contains(item.RemoteAddress))
                 {
-                    // Try IPInfo first for rich data
-                    string info = await GetIpInfoAsync(item.RemoteAddress);
-                    if (!string.IsNullOrEmpty(info))
-                    {
-                        item.WhoIs = info;
-                        _whoIsCache[item.RemoteAddress] = info;
-                        return;
-                    }
+                    _queuedIps.Add(item.RemoteAddress);
+                    _lookupQueue.Enqueue(item.RemoteAddress);
+                }
+            }
+        }
 
-                    // Fallback to DNS
-                    var entry = Dns.GetHostEntry(item.RemoteAddress);
-                    item.WhoIs = entry.HostName;
-                    _whoIsCache[item.RemoteAddress] = entry.HostName;
-                }
-                catch
+        private async Task ProcessLookups()
+        {
+            while (true)
+            {
+                if (_lookupQueue.TryDequeue(out string ip))
                 {
-                    item.WhoIs = "Unknown";
-                    _whoIsCache[item.RemoteAddress] = "Unknown";
+                    try
+                    {
+                        string result = await GetIpInfoAsync(ip);
+                        if (string.IsNullOrEmpty(result))
+                        {
+                            try
+                            {
+                                var entry = Dns.GetHostEntry(ip);
+                                result = entry.HostName;
+                            }
+                            catch { result = "Unknown"; }
+                        }
+                        
+                        _whoIsCache[ip] = result;
+
+                        // Update Active Items
+                        // Needs Dispatcher? No, binding should handle it if INPC is correct, but collection access is thread-safe?
+                        // ObservableCollection is not thread-safe. We should use Dispatcher if we modify the list, but we are modifying items IN the list.
+                        // Modifying properties of items in OC from bg thread is usually fine if UI dispatches change.
+                        // But finding the item needs lock or copy.
+                        
+                        UpdateItemsWithIp(ip, result);
+                    }
+                    catch { }
+
+                    lock (_queueLock) { _queuedIps.Remove(ip); }
+                    
+                    // Throttle 3s
+                    await Task.Delay(3000);
                 }
-            });
+                else
+                {
+                    await Task.Delay(500);
+                }
+            }
+        }
+
+        private void UpdateItemsWithIp(string ip, string val)
+        {
+             // Simple iteration - might race but acceptable for display update
+             foreach(var c in ActiveConnections.ToList()) 
+             {
+                 if (c.RemoteAddress == ip) c.WhoIs = val;
+             }
+             foreach(var c in HistoricalConnections.ToList())
+             {
+                 if (c.RemoteAddress == ip) c.WhoIs = val;
+             }
         }
 
         private async Task<string> GetIpInfoAsync(string ip)
