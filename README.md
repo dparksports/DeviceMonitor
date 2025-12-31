@@ -77,6 +77,17 @@ A native .NET 6+ WPF application for monitoring system events and managing VPN s
     *   **Refresh**: Update list of adapters and their status.
 *   **Troubleshooting**: Useful for resolving issues with "Microsoft Hosted Network Virtual Adapter" which can often interfere with other wireless features.
 
+### 10. Automated Security Enforcement
+*   **Active Defense**: The `SecurityEnforcer` runs in the background to automatically neutralize high-risk threats.
+*   **Hosted Network**: Automatically stops and disallows the Hosted Network if it becomes active.
+*   **WAN Miniport (SSTP)**: Detects, Stops Service, Disables Service, and **Uninstalls** the adapter automatically to prevent unauthorized tunnels.
+*   **AI Explanation**: Triggers an AI explanation for why the threat was blocked, appearing instantly on the Dashboard.
+
+### 11. Modern Dashboard UI & Settings
+*   **Unified Interface**: A single-window experience with a sidebar for easy navigation between all tools.
+*   **Live Dashboard**: Real-time status cards for Security, Network, and Tasks that change color (Green/Amber/Red) based on system state.
+*   **Configurable Scans**: Adjust the Security Enforcer scan interval (1s - 10s) via the new **Settings** page to balance performance vs. responsiveness.
+
 ## Usage
 
 ### Prerequisites
@@ -93,5 +104,5 @@ A native .NET 6+ WPF application for monitoring system events and managing VPN s
 
 You can download the latest version from the [Releases Page](https://github.com/dparksports/DeviceMonitor/releases).
 
-**Direct Download (v1.11.0):**
-[DeviceMonitorCS.zip](https://github.com/dparksports/DeviceMonitor/releases/download/v1.11.0/DeviceMonitorCS.zip)
+**Direct Download (v2.0.0):**
+[DeviceMonitorCS.zip](https://github.com/dparksports/DeviceMonitor/releases/download/v2.0.0/DeviceMonitorCS.zip)
