@@ -42,6 +42,9 @@ A native .NET 6+ WPF application for monitoring system events and managing VPN s
     *   **WAN Miniport**: Uninstall all WAN Miniports at once to reset network stack.
     *   **Bluetooth PAN**: Remove Bluetooth Personal Area Network devices.
     *   **Intel WiFi 6E AX210**: Specific target for Intel AX210 driver reset.
+*   **Disable Capability**: Temporarily disable network adapters without uninstalling them.
+    *   **Supported Adapters**: WAN Miniports, Microsoft WiFi Direct, Bluetooth PAN, and Intel AX210.
+*   **Live Notifications**: Get instant visual notifications when any network adapter is added, removed, or modified on the system.
 *   **Safety Features**: 
     *   Confirmation dialogs before any uninstall action.
     *   Reports success/failure counts.
@@ -82,5 +85,5 @@ A native .NET 6+ WPF application for monitoring system events and managing VPN s
 
 You can download the latest version from the [Releases Page](https://github.com/dparksports/DeviceMonitor/releases).
 
-**Direct Download (v1.9.0):**
-[DeviceMonitorCS.zip](https://github.com/dparksports/DeviceMonitor/releases/download/v1.9.0/DeviceMonitorCS.zip)
+**Direct Download (v1.10.0):**
+[DeviceMonitorCS.zip](https://github.com/dparksports/DeviceMonitor/releases/download/v1.10.0/DeviceMonitorCS.zip)
