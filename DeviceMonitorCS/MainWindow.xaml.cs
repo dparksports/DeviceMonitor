@@ -29,8 +29,8 @@ namespace DeviceMonitorCS
         public MainWindow()
         {
             InitializeComponent();
-            DeviceGrid.ItemsSource = DeviceData;
-            SecurityGrid.ItemsSource = SecurityData;
+            InitializeComponent();
+
 
             // Check Admin
             _currentUser = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
@@ -76,7 +76,7 @@ namespace DeviceMonitorCS
 
             // Navigation Wiring
             NavDashboardBtn.Click += (s, e) => NavigateTo(DashboardView);
-            NavLogsBtn.Click += (s, e) => NavigateTo(LogsView);
+
             
             HostedNetworkBtn.Click += (s, e) => NavigateTo(HostedNetworkView);
             WanMiniportBtn.Click += (s, e) => NavigateTo(WanMiniportView);
@@ -91,13 +91,15 @@ namespace DeviceMonitorCS
                 SecurityData.Clear();
             };
             
-            // Bind Dashboard
-            DashboardView.BindActivity(SecurityData);
+            // Bind Dashboard (New Unified Grid)
+            DashboardView.BindData(SecurityData, DeviceData);
+
+            // Start Monitoring
+            WifiDirectToggle.Click += WifiDirectToggle_Click;
+            DebugToggle.Click += DebugToggle_Click;
 
             // Wire Toggles
             VpnToggle.Click += VpnToggle_Click;
-            WifiDirectToggle.Click += WifiDirectToggle_Click;
-            DebugToggle.Click += DebugToggle_Click;
 
             Closed += MainWindow_Closed;
         }
@@ -423,9 +425,10 @@ namespace DeviceMonitorCS
 
         private void NavigateTo(UIElement targetView)
         {
-            // Hide all views
+            if (targetView == null) return;
+
+            // Hide all
             DashboardView.Visibility = Visibility.Collapsed;
-            LogsView.Visibility = Visibility.Collapsed;
             HostedNetworkView.Visibility = Visibility.Collapsed;
             WanMiniportView.Visibility = Visibility.Collapsed;
             NetworkAdaptersView.Visibility = Visibility.Collapsed;

@@ -67,7 +67,7 @@
 
                 <TextBlock Text="MAIN" Foreground="#808080" FontSize="12" Margin="5,0,0,5" FontWeight="SemiBold"/>
                 <Button x:Name="NavDashboardBtn" Content="Dashboard" Style="{StaticResource NavButton}"/>
-                <Button x:Name="NavLogsBtn" Content="Event Logs" Style="{StaticResource NavButton}"/>
+
 
                 <TextBlock Text="TOOLS" Foreground="#808080" FontSize="12" Margin="5,20,0,5" FontWeight="SemiBold"/>
                 <Button x:Name="HostedNetworkBtn" Content="Hosted Network" Style="{StaticResource NavButton}"/>
@@ -93,53 +93,8 @@
             <!-- Dashboard View (Default) -->
             <local:DashboardView x:Name="DashboardView" Visibility="Visible"/>
 
-            <!-- Logs / Old View -->
-            <Grid x:Name="LogsView" Visibility="Collapsed">
-                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="5"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                
-                <!-- Top Pane: Device Events -->
-                <GroupBox Grid.Row="0" Header="Device Events" Padding="5" Margin="10">
-                    <DataGrid x:Name="DeviceGrid" Background="Transparent" BorderThickness="0">
-                        <DataGrid.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Ask AI about this" Click="AskAi_Click"/>
-                            </ContextMenu>
-                        </DataGrid.ContextMenu>
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="80"/>
-                            <DataGridTextColumn Header="Event" Binding="{Binding EventType}" Width="80"/>
-                            <DataGridTextColumn Header="Device Name" Binding="{Binding Name}" Width="150"/>
-                            <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="100"/>
-                            <DataGridTextColumn Header="Initiator" Binding="{Binding Initiator}" Width="*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </GroupBox>
+            <!-- Logs View Removed (Integrated into Dashboard) -->
 
-                <!-- Resizable Splitter -->
-                <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" Background="#2D2D30"/>
-                
-                <!-- Middle Pane: Security Events -->
-                <GroupBox Grid.Row="2" Header="Security Events" Padding="5" Margin="10">
-                    <DataGrid x:Name="SecurityGrid" Background="Transparent" BorderThickness="0">
-                        <DataGrid.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Ask AI about this" Click="AskAi_Click"/>
-                            </ContextMenu>
-                        </DataGrid.ContextMenu>
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="80"/>
-                            <DataGridTextColumn Header="EventID" Binding="{Binding Id}" Width="60"/>
-                            <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="110"/>
-                            <DataGridTextColumn Header="Activity" Binding="{Binding Activity}" Width="100"/>
-                            <DataGridTextColumn Header="Account" Binding="{Binding Account}" Width="*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </GroupBox>
-            </Grid>
 
             <!-- Tools Views -->
             <views:HostedNetworkView x:Name="HostedNetworkView" Visibility="Collapsed"/>
