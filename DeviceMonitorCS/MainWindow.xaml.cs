@@ -29,7 +29,7 @@ namespace DeviceMonitorCS
         public MainWindow()
         {
             InitializeComponent();
-            InitializeComponent();
+
 
 
             // Check Admin

@@ -58,16 +58,27 @@ namespace DeviceMonitorCS.Views
 
                         if (idxTaskName == -1) idxTaskName = 0; 
 
+                        var addedTasks = new System.Collections.Generic.HashSet<string>();
+
                         for (int i = 1; i < lines.Length; i++)
                         {
                             var cols = ParseCsvLine(lines[i]);
                             if (cols.Length < 2) continue;
 
                             string taskName = GetCol(cols, idxTaskName);
+                            
+                            // Skip if this is a repeated header row
+                            if (taskName == headers[idxTaskName]) continue;
+
+                            // Skip if duplicate task (e.g. multiple triggers)
+                            string tnClean = taskName.Trim('"');
+                            if (addedTasks.Contains(tnClean)) continue;
+
+                            addedTasks.Add(tnClean);
                            
                             TasksData.Add(new ScheduledTaskItem
                             {
-                                TaskName = taskName.Trim('"'),
+                                TaskName = tnClean,
                                 State = GetCol(cols, idxStatus),
                                 Action = GetCol(cols, idxAction),
                                 User = GetCol(cols, idxUser)
