@@ -15,12 +15,16 @@
         <!-- Toolbar -->
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
+                <Button x:Name="DisableWifiDirectBtn" Content="Disable Microsoft WiFi Direct Virtual Adapter" Margin="5"/>
                 <Button x:Name="UninstallWifiDirectBtn" Content="Uninstall Microsoft WiFi Direct Virtual Adapter" Margin="5"/>
                 <Separator/>
+                <Button x:Name="DisableWanMiniportBtn" Content="Disable All WAN Miniport" Margin="5"/>
                 <Button x:Name="UninstallWanMiniportBtn" Content="Uninstall All WAN Miniport" Margin="5"/>
                 <Separator/>
-                <Button x:Name="UninstallBluetoothPanBtn" Content="Uninstall Bluetooth Device (Personal Area Network)" Margin="5"/>
+                <Button x:Name="DisableBluetoothPanBtn" Content="Disable Bluetooth Device (PAN)" Margin="5"/>
+                <Button x:Name="UninstallBluetoothPanBtn" Content="Uninstall Bluetooth Device (PAN)" Margin="5"/>
                 <Separator/>
+                <Button x:Name="DisableIntelWifiBtn" Content="Disable Intel WiFi 6E AX210" Margin="5"/>
                 <Button x:Name="UninstallIntelWifiBtn" Content="Uninstall Intel WiFi 6E AX210" Margin="5"/>
                 <Separator/>
                 <Button x:Name="RefreshAdaptersBtn" Content="Refresh" Margin="5" Width="70"/>

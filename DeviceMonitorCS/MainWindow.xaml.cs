@@ -19,8 +19,6 @@ namespace DeviceMonitorCS
 
         private ManagementEventWatcher _deviceWatcherAdd;
         private ManagementEventWatcher _deviceWatcherRem;
-        private DispatcherTimer _securityTimer;
-        private long _lastRecordId = 0;
         private bool _isAdmin;
         private string _currentUser;
 
@@ -328,7 +326,6 @@ namespace DeviceMonitorCS
             _deviceWatcherAdd?.Stop();
             _deviceWatcherRem?.Stop();
             // _logWatcher?.Enabled = false; // if using watcher
-            _securityTimer?.Stop();
             Application.Current.Shutdown();
         }
     }
