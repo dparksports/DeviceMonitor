@@ -44,5 +44,14 @@ Don't just see "Event ID 4624" — understand it.
 *   **Scan Interval**: Go to the **Settings** tab to adjust how aggressively the Security Enforcer scans (Default: 2000ms).
 *   **AI API**: Place your Gemini API key in `apikey.txt` to enable AI features.
 
+### 🛡️ Auto-Start at Logon
+Since this tool requires Administrator privileges, the best way to start it automatically is via **Task Scheduler** (bypasses UAC prompts).
+
+**Run this command (Administrator PowerShell):**
+```powershell
+schtasks /create /tn "StartSystemMonitor" /tr "'C:\Path\To\DeviceMonitorCS.exe'" /sc onlogon /rl highest /f
+```
+*(Replace `C:\Path\To\...` with the actual path to your extracted executable)*
+
 ---
 *Built with .NET 6 WPF & Modern C#*
