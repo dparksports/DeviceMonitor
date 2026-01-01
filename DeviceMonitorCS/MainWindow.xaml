@@ -4,7 +4,8 @@
         xmlns:local="clr-namespace:DeviceMonitorCS"
         xmlns:views="clr-namespace:DeviceMonitorCS.Views"
         Title="Windows System Monitor" Height="700" Width="1100" WindowStartupLocation="CenterScreen"
-        Background="#1E1E1E">
+        Background="#1E1E1E"
+        Icon="app_icon.ico">
     <Window.Resources>
         <Style TargetType="DataGrid">
             <Setter Property="AutoGenerateColumns" Value="False"/>
@@ -67,7 +68,8 @@
 
                 <TextBlock Text="MAIN" Foreground="#808080" FontSize="12" Margin="5,0,0,5" FontWeight="SemiBold"/>
                 <Button x:Name="NavDashboardBtn" Content="Dashboard" Style="{StaticResource NavButton}"/>
-
+                <Button x:Name="PerformanceBtn" Content="System Performance" Style="{StaticResource NavButton}"/>
+                
 
                 <TextBlock Text="TOOLS" Foreground="#808080" FontSize="12" Margin="5,20,0,5" FontWeight="SemiBold"/>
                 <Button x:Name="HostedNetworkBtn" Content="Hosted Network" Style="{StaticResource NavButton}"/>
@@ -92,6 +94,9 @@
             
             <!-- Dashboard View (Default) -->
             <local:DashboardView x:Name="DashboardView" Visibility="Visible"/>
+
+            <!-- Performance View -->
+            <views:PerformanceView x:Name="PerformanceView" Visibility="Collapsed"/>
 
             <!-- Logs View Removed (Integrated into Dashboard) -->
 
