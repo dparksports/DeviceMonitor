@@ -236,7 +236,24 @@ $rules | ForEach-Object {
 
         private void AskAiGroup_Click(object sender, RoutedEventArgs e)
         {
-             if (sender is MenuItem mi && mi.Tag is string groupName)
+             string groupName = null;
+             if (sender is MenuItem mi)
+             {
+                 if (mi.Tag is string t && !string.IsNullOrEmpty(t))
+                 {
+                     groupName = t;
+                 }
+                 else if (mi.Parent is ContextMenu cm && cm.PlacementTarget is FrameworkElement target)
+                 {
+                     // Fallback: Get from CollectionViewGroup via DataContext
+                     if (target.DataContext is CollectionViewGroup cvg)
+                     {
+                         groupName = cvg.Name?.ToString();
+                     }
+                 }
+             }
+
+             if (!string.IsNullOrEmpty(groupName))
              {
                  var rules = new List<FirewallRule>();
                  rules.AddRange(InboundRules.Where(r => r.DisplayGroup == groupName));
