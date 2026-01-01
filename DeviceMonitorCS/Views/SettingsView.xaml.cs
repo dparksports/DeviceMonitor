@@ -24,5 +24,46 @@ namespace DeviceMonitorCS.Views
             IntervalSlider.Value = interval;
             IntervalValueText.Text = $"{interval} ms";
         }
+
+
+        private void InstallTaskBtn_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            try
+            {
+                string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+                string taskName = "DeviceMonitorAutoStart";
+                string command = $"/create /sc onlogon /tn \"{taskName}\" /tr \"'{exePath}'\" /rl highest /f";
+
+                var startInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "schtasks.exe",
+                    Arguments = command,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using (var process = System.Diagnostics.Process.Start(startInfo))
+                {
+                    process.WaitForExit();
+                    string output = process.StandardOutput.ReadToEnd();
+                    string error = process.StandardError.ReadToEnd();
+
+                    if (process.ExitCode == 0)
+                    {
+                        System.Windows.MessageBox.Show("Successfully installed to Scheduled Tasks!", "Success", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        System.Windows.MessageBox.Show($"Failed to install task.\nError: {error}\nOutput: {output}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                 System.Windows.MessageBox.Show($"An error occurred:\n{ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
     }
 }
