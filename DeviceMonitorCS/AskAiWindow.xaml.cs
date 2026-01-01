@@ -17,35 +17,7 @@ namespace DeviceMonitorCS
         public AskAiWindow(object contextItem)
         {
             InitializeComponent();
-            
-            string apiKey = "";
-            try
-            {
-                var keyPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "apikey.txt");
-                if (System.IO.File.Exists(keyPath))
-                {
-                    apiKey = System.IO.File.ReadAllText(keyPath).Trim();
-                }
-                else
-                {
-                    // Fallback: check project root if running from bin in dev mode (optional, but helpful)
-                    var devPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "apikey.txt");
-                    if (System.IO.File.Exists(devPath))
-                    {
-                         apiKey = System.IO.File.ReadAllText(devPath).Trim();
-                    }
-                }
-            }
-            catch {}
-
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                MessageBox.Show("API Key not found. Please create 'apikey.txt' in the application directory with your Gemini API key.", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                Close();
-                return;
-            }
-
-            _client = new GeminiClient(apiKey);
+            Loaded += Window_Loaded;
 
             try
             {
@@ -61,6 +33,39 @@ namespace DeviceMonitorCS
             QuestionBox.SelectAll();
 
             AskBtn.Click += AskBtn_Click;
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            string apiKey = "";
+            try
+            {
+                var keyPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "apikey.txt");
+                if (System.IO.File.Exists(keyPath))
+                {
+                    apiKey = System.IO.File.ReadAllText(keyPath).Trim();
+                }
+                else
+                {
+                    // Fallback using simple path traversal to find project root (only works in typical dev structure)
+                    // Trying 3 levels up from bin/Debug/net8.0-windows
+                    var devPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "apikey.txt");
+                    if (System.IO.File.Exists(devPath))
+                    {
+                        apiKey = System.IO.File.ReadAllText(devPath).Trim();
+                    }
+                }
+            }
+            catch { }
+
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                MessageBox.Show("API Key not found. Please create 'apikey.txt' in the application directory with your Gemini API key.", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Close();
+                return;
+            }
+
+            _client = new GeminiClient(apiKey);
         }
 
         private async void AskBtn_Click(object sender, RoutedEventArgs e)

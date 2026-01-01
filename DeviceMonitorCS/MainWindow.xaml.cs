@@ -350,13 +350,24 @@ namespace DeviceMonitorCS
 
         private void ProcessSecurityEvent(EventRecord evt)
         {
-             string account = "N/A";
+             // Source Column (mapped to Account property) - Use Provider Name
+             string source = evt.ProviderName ?? "System";
+
+             // Details Column (mapped to Type property) - Use Description
+             string details = "";
              try 
              {
-                if (evt.UserId != null)
-                    account = evt.UserId.Translate(typeof(NTAccount)).Value;
+                 details = evt.FormatDescription();
+                 if (!string.IsNullOrEmpty(details))
+                 {
+                     // Clean up newlines and truncate
+                     details = details.Replace("\r", " ").Replace("\n", " ");
+                     if (details.Length > 150) details = details.Substring(0, 147) + "...";
+                 }
              }
-             catch {}
+             catch { details = evt.OpcodeDisplayName ?? "Info"; }
+
+             if (string.IsNullOrEmpty(details)) details = evt.OpcodeDisplayName ?? "Info";
 
              string activity = evt.TaskDisplayName ?? $"Event {evt.Id}";
              
@@ -364,9 +375,9 @@ namespace DeviceMonitorCS
              {
                  Time = evt.TimeCreated?.ToString("HH:mm:ss"),
                  Id = evt.Id,
-                 Type = evt.OpcodeDisplayName ?? "-",
-                 Activity = activity,
-                 Account = account
+                 Type = details,   // Populates 'Details' column
+                 Activity = activity, // Populates 'Event' column
+                 Account = source    // Populates 'Source' column
              });
         }
 
@@ -390,9 +401,9 @@ namespace DeviceMonitorCS
             Dispatcher.Invoke(() => {
                 SecurityData.Insert(0, new SecurityEvent { 
                      Time = DateTime.Now.ToString("HH:mm:ss"), 
-                     Activity = $"Security Enforcer: {type}", 
-                     Type = "Intervention", 
-                     Account = "SYSTEM", 
+                     Activity = $"Blocked: {type}", 
+                     Type = details, // Details Column
+                     Account = "Security Enforcer", // Source Column
                      Id = 999 
                 });
             });
@@ -411,9 +422,9 @@ namespace DeviceMonitorCS
                     Dispatcher.Invoke(() => {
                          SecurityData.Insert(0, new SecurityEvent { 
                              Time = DateTime.Now.ToString("HH:mm:ss"), 
-                             Activity = $"AI Insight: {explanation}", 
-                             Type = "Info", 
-                             Account = "Gemini", 
+                             Activity = "Threat Analysis", 
+                             Type = explanation, // Details Column
+                             Account = "Gemini AI", // Source Column
                              Id = 999 
                         });
                          
