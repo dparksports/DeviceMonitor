@@ -78,9 +78,14 @@
             <TabItem Header="Inbound Rules">
                 <DataGrid x:Name="InboundGrid" ItemsSource="{Binding Source={StaticResource InboundRulesSource}}" 
                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
-                          EnableRowVirtualization="False"
+                          EnableRowVirtualization="False" ScrollViewer.CanContentScroll="False"
                           Background="#252526" Foreground="White" RowBackground="#252526" AlternatingRowBackground="#2D2D30"
                           GridLinesVisibility="Horizontal" HeadersVisibility="Column" BorderThickness="0" Margin="0,10,0,0">
+                    <DataGrid.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel />
+                        </ItemsPanelTemplate>
+                    </DataGrid.ItemsPanel>
                     <DataGrid.GroupStyle>
                         <GroupStyle>
                             <GroupStyle.ContainerStyle>
@@ -142,9 +147,14 @@
             <TabItem Header="Outbound Rules">
                 <DataGrid x:Name="OutboundGrid" ItemsSource="{Binding Source={StaticResource OutboundRulesSource}}" 
                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
-                          EnableRowVirtualization="False"
+                          EnableRowVirtualization="False" ScrollViewer.CanContentScroll="False"
                           Background="#252526" Foreground="White" RowBackground="#252526" AlternatingRowBackground="#2D2D30"
                           GridLinesVisibility="Horizontal" HeadersVisibility="Column" BorderThickness="0" Margin="0,10,0,0">
+                    <DataGrid.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel />
+                        </ItemsPanelTemplate>
+                    </DataGrid.ItemsPanel>
                     <DataGrid.GroupStyle>
                         <GroupStyle>
                             <GroupStyle.ContainerStyle>
