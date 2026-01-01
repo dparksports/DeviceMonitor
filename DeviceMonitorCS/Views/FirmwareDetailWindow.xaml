@@ -16,8 +16,9 @@
                  Background="#252526" Foreground="#D4D4D4" 
                  BorderBrush="#3E3E42" BorderThickness="1"
                  FontFamily="Consolas" FontSize="14"
-                 IsReadOnly="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
-                 TextWrapping="No"/>
+                 IsReadOnly="True" 
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto"/>
 
         <Button x:Name="CloseBtn" Grid.Row="2" Content="Close" Width="100" Height="30" Margin="10" 
                 Click="CloseBtn_Click" Background="#3E3E42" Foreground="White" BorderThickness="0"/>
