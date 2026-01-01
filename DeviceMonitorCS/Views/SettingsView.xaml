@@ -32,6 +32,14 @@
                                Foreground="#808080" FontSize="11" Margin="0,5,0,0" FontStyle="Italic"/>
                 </StackPanel>
             </GroupBox>
+
+            <GroupBox Header="Startup Behavior" Foreground="White" BorderBrush="#3E3E42" Padding="15" Margin="0,20,0,0">
+                <StackPanel>
+                    <TextBlock Text="Run automatically at logon with highest privileges." Foreground="#CCCCCC" Margin="0,0,0,15"/>
+                    <Button x:Name="InstallTaskBtn" Content="Install to Scheduled Tasks" Width="200" HorizontalAlignment="Left" 
+                            Padding="10,5" Background="#2D2D30" Foreground="White" BorderBrush="#3E3E42" Click="InstallTaskBtn_Click"/>
+                </StackPanel>
+            </GroupBox>
             
             <!-- Future settings can go here -->
 
