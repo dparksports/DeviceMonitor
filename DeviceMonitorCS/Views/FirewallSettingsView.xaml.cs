@@ -57,9 +57,9 @@ Get-NetFirewallRule | ForEach-Object {
             Profile = $r.Profile.ToString()
             Program = if ($app) { $app.Program } else { '' }
             Protocol = if ($port) { $port.Protocol } else { '' }
-            LocalPort = if ($port) { $port.LocalPort } else { '' }
-            RemotePort = if ($port) { $port.RemotePort } else { '' }
-            RemoteAddress = if ($addr) { $addr.RemoteAddress } else { '' }
+            LocalPort = if ($port -and $port.LocalPort) { ($port.LocalPort -join ',') } else { '' }
+            RemotePort = if ($port -and $port.RemotePort) { ($port.RemotePort -join ',') } else { '' }
+            RemoteAddress = if ($addr -and $addr.RemoteAddress) { ($addr.RemoteAddress -join ',') } else { '' }
         }
     } catch {}
 } | ConvertTo-Json -Depth 2
