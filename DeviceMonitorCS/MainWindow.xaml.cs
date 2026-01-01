@@ -25,6 +25,7 @@ namespace DeviceMonitorCS
         private readonly string[] _vpnServices = { "RasMan", "IKEEXT", "PolicyAgent", "RemoteAccess" };
         
         private SecurityEnforcer _enforcer;
+        private PerformanceMonitor _perfMonitor;
 
         public MainWindow()
         {
@@ -76,7 +77,7 @@ namespace DeviceMonitorCS
 
             // Navigation Wiring
             NavDashboardBtn.Click += (s, e) => NavigateTo(DashboardView);
-
+            PerformanceBtn.Click += (s, e) => NavigateTo(PerformanceView);
             
             HostedNetworkBtn.Click += (s, e) => NavigateTo(HostedNetworkView);
             WanMiniportBtn.Click += (s, e) => NavigateTo(WanMiniportView);
@@ -102,6 +103,18 @@ namespace DeviceMonitorCS
             VpnToggle.Click += VpnToggle_Click;
 
             Closed += MainWindow_Closed;
+            
+            // Performance Monitor Init
+            _perfMonitor = new PerformanceMonitor();
+            var perfTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            perfTimer.Tick += (s, e) => 
+            {
+                if (PerformanceView.Visibility == Visibility.Visible)
+                {
+                     PerformanceView.UpdateMetrics(_perfMonitor.GetMetrics());
+                }
+            };
+            perfTimer.Start();
         }
 
         private void InitializeToggles()
@@ -450,6 +463,7 @@ namespace DeviceMonitorCS
 
             // Hide all
             DashboardView.Visibility = Visibility.Collapsed;
+            PerformanceView.Visibility = Visibility.Collapsed;
             HostedNetworkView.Visibility = Visibility.Collapsed;
             WanMiniportView.Visibility = Visibility.Collapsed;
             NetworkAdaptersView.Visibility = Visibility.Collapsed;
