@@ -45,3 +45,7 @@ bld/
 [Ll]ogs/
 
 apikey.txt
+
+# Publishing
+publish/
+*.zip
