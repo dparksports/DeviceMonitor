@@ -53,8 +53,62 @@ namespace DeviceMonitorCS.Views
              WifiDirectToggle.IsChecked = CheckWifiDirectStatus();
              DebugToggle.IsChecked = CheckDebugStatus();
              UsageDataToggle.IsChecked = IsUsageDataEnabled();
+             CheckTamperProtectionStatus();
              
              UpdateStatusText("Statuses refreshed.");
+        }
+
+        private async void CheckTamperProtectionStatus()
+        {
+            try
+            {
+                TamperProtectionText.Text = "Checking...";
+                TamperProtectionText.Foreground = Brushes.Gray;
+
+                await Task.Run(() =>
+                {
+                    string script = @"$tp = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows Defender\Features' -ErrorAction SilentlyContinue).TamperProtection; if ($tp -eq 1) { 'ENABLED' } elseif ($tp -eq 0) { 'DISABLED' } else { 'UNKNOWN' }";
+                    
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = $"-Command \"{script}\"",
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    using (var p = Process.Start(psi))
+                    {
+                        string result = p.StandardOutput.ReadToEnd().Trim();
+                        p.WaitForExit();
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            if (result == "ENABLED")
+                            {
+                                TamperProtectionText.Text = "Enabled";
+                                TamperProtectionText.Foreground = Brushes.LimeGreen;
+                            }
+                            else if (result == "DISABLED")
+                            {
+                                TamperProtectionText.Text = "Disabled";
+                                TamperProtectionText.Foreground = Brushes.Red;
+                            }
+                            else
+                            {
+                                TamperProtectionText.Text = "Unknown / Managed";
+                                TamperProtectionText.Foreground = Brushes.Orange;
+                            }
+                        });
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                TamperProtectionText.Text = "Error";
+                Debug.WriteLine($"TP Check Error: {ex.Message}");
+            }
         }
 
         private void UpdateStatusText(string msg)
