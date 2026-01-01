@@ -93,7 +93,7 @@
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="{x:Type GroupItem}">
-                                                <Expander IsExpanded="False" Background="#333333" Foreground="White" BorderBrush="Gray" BorderThickness="0,0,0,1">
+                                                <Expander IsExpanded="False" Expanded="GroupExpander_Expanded" Background="#333333" Foreground="White" BorderBrush="Gray" BorderThickness="0,0,0,1">
                                                     <Expander.Header>
                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                             <CheckBox VerticalAlignment="Center" Margin="0,0,10,0"
@@ -162,7 +162,7 @@
                                     <Setter Property="Template">
                                         <Setter.Value>
                                             <ControlTemplate TargetType="{x:Type GroupItem}">
-                                                <Expander IsExpanded="False" Background="#333333" Foreground="White" BorderBrush="Gray" BorderThickness="0,0,0,1">
+                                                <Expander IsExpanded="False" Expanded="GroupExpander_Expanded" Background="#333333" Foreground="White" BorderBrush="Gray" BorderThickness="0,0,0,1">
                                                     <Expander.Header>
                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                              <CheckBox VerticalAlignment="Center" Margin="0,0,10,0"

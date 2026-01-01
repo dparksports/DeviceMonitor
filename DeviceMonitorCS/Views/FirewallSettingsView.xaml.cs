@@ -216,6 +216,45 @@ $rules | ForEach-Object {
             }
         }
 
+        private void GroupExpander_Expanded(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe)
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    var groupItem = FindVisualParent<GroupItem>(fe);
+                    if (groupItem != null)
+                    {
+                        var parent = ItemsControl.ItemsControlFromItemContainer(groupItem);
+                        if (parent is DataGrid dataGrid)
+                        {
+                            dataGrid.InvalidateMeasure();
+                            dataGrid.UpdateLayout();
+
+                            // Force column width refresh as requested (simulates resize)
+                            // We toggle one star column to forcing a re-calculation
+                            if (dataGrid.Columns.Count > 0)
+                            {
+                                var col = dataGrid.Columns[0];
+                                var w = col.Width;
+                                col.Width = DataGridLength.Auto;
+                                dataGrid.UpdateLayout();
+                                col.Width = w;
+                            }
+                        }
+                    }
+                }), System.Windows.Threading.DispatcherPriority.ContextIdle);
+            }
+        }
+
+        private static T FindVisualParent<T>(DependencyObject child) where T : DependencyObject
+        {
+            DependencyObject parentObject = System.Windows.Media.VisualTreeHelper.GetParent(child);
+            if (parentObject == null) return null;
+            if (parentObject is T parent) return parent;
+            return FindVisualParent<T>(parentObject);
+        }
+
         private async void ResetBtn_Click(object sender, RoutedEventArgs e)
         {
             var res = MessageBox.Show("Are you sure you want to reset Windows Firewall configuration to defaults? This may affect network connectivity.", "Confirm Reset", MessageBoxButton.YesNo, MessageBoxImage.Warning);
