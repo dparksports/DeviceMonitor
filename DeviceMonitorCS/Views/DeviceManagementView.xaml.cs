@@ -13,6 +13,8 @@ namespace DeviceMonitorCS.Views
     public partial class DeviceManagementView : UserControl
     {
         public ObservableCollection<DeviceInventoryItem> InventoryList { get; set; } = new ObservableCollection<DeviceInventoryItem>();
+        public ObservableCollection<DeviceInventoryItem> InputDevicesList { get; set; } = new ObservableCollection<DeviceInventoryItem>();
+        public ObservableCollection<DeviceInventoryItem> UnconnectedInputList { get; set; } = new ObservableCollection<DeviceInventoryItem>();
         public ObservableCollection<DeviceHistoryItem> HistoryList { get; set; } = new ObservableCollection<DeviceHistoryItem>();
         
         // Cache full history to avoid re-querying log constantly
@@ -22,6 +24,9 @@ namespace DeviceMonitorCS.Views
         {
             InitializeComponent();
             InventoryGrid.ItemsSource = InventoryList;
+            
+            // Note: Other tabs will bind in XAML to InputDevicesList and UnconnectedInputList
+            
             HistoryGrid.ItemsSource = HistoryList;
 
             Loaded += (s, e) => RefreshData();
@@ -46,7 +51,7 @@ namespace DeviceMonitorCS.Views
 
         private void InventoryGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-             if (InventoryGrid.SelectedItem is DeviceInventoryItem item)
+             if (sender is DataGrid dg && dg.SelectedItem is DeviceInventoryItem item)
              {
                  FilterHistory(item);
              }
@@ -88,7 +93,10 @@ namespace DeviceMonitorCS.Views
         private async Task LoadInventory()
         {
             InventoryList.Clear();
-            int totalCount = 0;
+            InputDevicesList.Clear();
+            UnconnectedInputList.Clear();
+
+            int inputDeviceCount = 0;
             int activeCount = 0;
 
             await Task.Run(() =>
@@ -105,24 +113,46 @@ namespace DeviceMonitorCS.Views
 
                             bool present = (bool)(device["Present"] ?? false);
                             
-                            totalCount++;
-                            if (present) activeCount++;
-
                             // Clean Name
                             string name = device["Name"]?.ToString();
                             if (string.IsNullOrEmpty(name)) name = "Unknown Device";
 
+                            var item = new DeviceInventoryItem
+                            {
+                                Category = pnpClass, // Use the PnP Class as Category
+                                Name = name,
+                                Manufacturer = device["Manufacturer"]?.ToString(),
+                                Status = present ? "Active" : "Inactive",
+                                DeviceId = device["DeviceID"]?.ToString()
+                            };
+
                             Dispatcher.Invoke(() =>
                             {
-                                InventoryList.Add(new DeviceInventoryItem
+                                InventoryList.Add(item);
+                                
+                                // Filter for Input Devices (Keyboard, Mouse, Monitor)
+                                // Standard classes: Keyboard, Mouse, Monitor
+                                bool isInput = pnpClass.Equals("Keyboard", StringComparison.OrdinalIgnoreCase) ||
+                                               pnpClass.Equals("Mouse", StringComparison.OrdinalIgnoreCase) ||
+                                               pnpClass.Equals("Monitor", StringComparison.OrdinalIgnoreCase);
+
+                                if (isInput)
                                 {
-                                    Category = pnpClass, // Use the PnP Class as Category
-                                    Name = name,
-                                    Manufacturer = device["Manufacturer"]?.ToString(),
-                                    Status = present ? "Active" : "Inactive",
-                                    DeviceId = device["DeviceID"]?.ToString()
-                                });
+                                    if (present)
+                                    {
+                                        InputDevicesList.Add(item);
+                                        inputDeviceCount++; // Only count Connected Input Devices as per request? 
+                                        // "Total Devices, rename it to Input Devices and count only keyboards, mice and monitors."
+                                        // Usually implies connected ones, but I'll count connected ones for the big number.
+                                    }
+                                    else
+                                    {
+                                        UnconnectedInputList.Add(item);
+                                    }
+                                }
                             });
+                            
+                            if (present) activeCount++;
                         }
                     }
                 }
@@ -132,8 +162,14 @@ namespace DeviceMonitorCS.Views
                 }
             });
 
-            TotalDeviceCount.Text = totalCount.ToString();
-            ActiveDeviceCount.Text = activeCount.ToString();
+            TotalDeviceCount.Text = inputDeviceCount.ToString();
+            ActiveDeviceCount.Text = activeCount.ToString(); // Keeping global active count? Or active inputs?
+            // "For Total Devices, rename it to Input Devices and count only keyboards, mice and monitors."
+            // I'll assume ActiveDeviceCount stays as global active? Or maybe Active Input?
+            // Let's make ActiveDeviceCount be Global Active for now, and TotalDeviceCount be "Input Devices (Connected?)".
+            // Actually, "Input Devices" usually means all identified inputs.
+            // But if I have a list "Input Devices" (Implied Connected from Step 1) and "Unconnected Input Devices" (Step 2).
+            // I will set TotalDeviceCount to InputDevicesList.Count (Active Inputs).
         }
 
         private async Task LoadHistory()
