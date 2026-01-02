@@ -580,6 +580,7 @@ namespace DeviceMonitorCS
             SettingsView.Visibility = Visibility.Collapsed;
             FirmwareSettingsView.Visibility = Visibility.Collapsed;
             FirewallSettingsView.Visibility = Visibility.Collapsed;
+            WindowsDefenderView.Visibility = Visibility.Collapsed;
 
             // Show target
             if (targetView != null)
