@@ -115,6 +115,7 @@ namespace DeviceMonitorCS
             NavDashboardBtn.Click += (s, e) => NavigateTo(DashboardView);
             PerformanceBtn.Click += (s, e) => NavigateTo(PerformanceView);
             PrivacyBtn.Click += (s, e) => NavigateTo(PrivacyView);
+            DefenderBtn.Click += (s, e) => NavigateTo(WindowsDefenderView);
             FirmwareSettingsBtn.Click += (s, e) => NavigateTo(FirmwareSettingsView);
             FirewallSettingsBtn.Click += (s, e) => 
             {
