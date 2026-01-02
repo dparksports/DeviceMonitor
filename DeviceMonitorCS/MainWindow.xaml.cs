@@ -117,6 +117,7 @@ namespace DeviceMonitorCS
             PrivacyBtn.Click += (s, e) => NavigateTo(PrivacyView);
             DefenderBtn.Click += (s, e) => NavigateTo(WindowsDefenderView);
             FirmwareSettingsBtn.Click += (s, e) => NavigateTo(FirmwareSettingsView);
+            DeviceManagementBtn.Click += (s, e) => NavigateTo(DeviceManagementView);
             FirewallSettingsBtn.Click += (s, e) => 
             {
                 NavigateTo(FirewallSettingsView);
@@ -579,6 +580,7 @@ namespace DeviceMonitorCS
             ConnectionsView.Visibility = Visibility.Collapsed;
             SettingsView.Visibility = Visibility.Collapsed;
             FirmwareSettingsView.Visibility = Visibility.Collapsed;
+            DeviceManagementView.Visibility = Visibility.Collapsed;
             FirewallSettingsView.Visibility = Visibility.Collapsed;
             WindowsDefenderView.Visibility = Visibility.Collapsed;
 

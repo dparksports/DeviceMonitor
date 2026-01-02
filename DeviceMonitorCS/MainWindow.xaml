@@ -72,6 +72,7 @@
                 <Button x:Name="PrivacyBtn" Content="Privacy Settings" Style="{StaticResource NavButton}"/>
                 <Button x:Name="DefenderBtn" Content="Windows Defender" Style="{StaticResource NavButton}"/>
                 <Button x:Name="FirmwareSettingsBtn" Content="Firmware Settings" Style="{StaticResource NavButton}"/>
+                <Button x:Name="DeviceManagementBtn" Content="Device Management" Style="{StaticResource NavButton}"/>
                 <Button x:Name="FirewallSettingsBtn" Content="Firewall Settings" Style="{StaticResource NavButton}"/>
                 
 
@@ -103,6 +104,7 @@
             
             <!-- Firmware Settings View -->
             <views:FirmwareSettingsView x:Name="FirmwareSettingsView" Visibility="Collapsed"/>
+             <views:DeviceManagementView x:Name="DeviceManagementView" Visibility="Collapsed"/>
             <views:FirewallSettingsView x:Name="FirewallSettingsView" Visibility="Collapsed"/>
 
             <!-- Tools Views -->
