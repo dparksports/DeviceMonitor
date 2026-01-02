@@ -88,60 +88,35 @@ namespace DeviceMonitorCS.Views
         private async Task LoadInventory()
         {
             InventoryList.Clear();
-            int kbdCount = 0;
-            int mouseCount = 0;
-            int monCount = 0;
+            int totalCount = 0;
+            int activeCount = 0;
 
             await Task.Run(() =>
             {
-                // Use Win32_PnPEntity to find Everything (Active & Inactive)
-                // Filter by Service or Class
-                // Keyboards: ClassGuid = {4d36e96b-e325-11ce-bfc1-08002be10318}
-                // Mice: ClassGuid = {4d36e96f-e325-11ce-bfc1-08002be10318}
-                // Monitors: ClassGuid = {4d36e96e-e325-11ce-bfc1-08002be10318}
-
-                string[] targetClasses = new[] { 
-                    "{4d36e96b-e325-11ce-bfc1-08002be10318}", // Keyboard
-                    "{4d36e96f-e325-11ce-bfc1-08002be10318}", // Mouse
-                    "{4d36e96e-e325-11ce-bfc1-08002be10318}"  // Monitor
-                };
-
                 try
                 {
-                    // "Present" property tells us if it is currently connected.
-                    using (var searcher = new ManagementObjectSearcher("SELECT Name, Manufacturer, DeviceID, ClassGuid, Present, Service FROM Win32_PnPEntity"))
+                    // Fetch ALL PnP Devices
+                    using (var searcher = new ManagementObjectSearcher("SELECT Name, Manufacturer, DeviceID, PNPClass, Present, Status FROM Win32_PnPEntity"))
                     {
                         foreach (var device in searcher.Get())
                         {
-                            string classGuid = device["ClassGuid"]?.ToString()?.ToLower();
-                            if (string.IsNullOrEmpty(classGuid)) continue;
-
-                            string category = "Unknown";
-                            if (classGuid.Contains("4d36e96b")) category = "Keyboard";
-                            else if (classGuid.Contains("4d36e96f")) category = "Mouse";
-                            else if (classGuid.Contains("4d36e96e")) category = "Monitor";
-                            else continue; // Skip non-matching
+                            string pnpClass = device["PNPClass"]?.ToString();
+                            if (string.IsNullOrEmpty(pnpClass)) pnpClass = "Uncategorized";
 
                             bool present = (bool)(device["Present"] ?? false);
                             
-                            // Stats (Only count active for the top cards?) -> User asked to track inactive too, but typically stats show active. 
-                            // Let's count Active for stats, but list all.
-                            if (present)
-                            {
-                                if (category == "Keyboard") kbdCount++;
-                                if (category == "Mouse") mouseCount++;
-                                if (category == "Monitor") monCount++;
-                            }
+                            totalCount++;
+                            if (present) activeCount++;
 
                             // Clean Name
                             string name = device["Name"]?.ToString();
-                            if (string.IsNullOrEmpty(name)) name = "Generic Device";
+                            if (string.IsNullOrEmpty(name)) name = "Unknown Device";
 
                             Dispatcher.Invoke(() =>
                             {
                                 InventoryList.Add(new DeviceInventoryItem
                                 {
-                                    Category = category,
+                                    Category = pnpClass, // Use the PnP Class as Category
                                     Name = name,
                                     Manufacturer = device["Manufacturer"]?.ToString(),
                                     Status = present ? "Active" : "Inactive",
@@ -157,9 +132,8 @@ namespace DeviceMonitorCS.Views
                 }
             });
 
-            KeyboardCountFormatted.Text = kbdCount.ToString();
-            MouseCountFormatted.Text = mouseCount.ToString();
-            MonitorCountFormatted.Text = monCount.ToString();
+            TotalDeviceCount.Text = totalCount.ToString();
+            ActiveDeviceCount.Text = activeCount.ToString();
         }
 
         private async Task LoadHistory()
@@ -181,27 +155,19 @@ namespace DeviceMonitorCS.Views
                         {
                             string desc = eventInstance.FormatDescription();
                             
-                            // Broader filter since we want history for potentially "Inactive" items that match our categories
-                            bool relevant = desc.Contains("Keyboard", StringComparison.OrdinalIgnoreCase) ||
-                                            desc.Contains("Mouse", StringComparison.OrdinalIgnoreCase) ||
-                                            desc.Contains("Monitor", StringComparison.OrdinalIgnoreCase) ||
-                                            desc.Contains("Display", StringComparison.OrdinalIgnoreCase) ||
-                                            desc.Contains("HID", StringComparison.OrdinalIgnoreCase) ||
-                                            desc.Contains("USB", StringComparison.OrdinalIgnoreCase);
-
-                            if (relevant)
+                            // Broader filter: Include ALL PnP events since we track all devices now.
+                            // The Inventory selection will handle specific filtering.
+                            
+                            var item = new DeviceHistoryItem
                             {
-                                var item = new DeviceHistoryItem
-                                {
-                                    Time = eventInstance.TimeCreated?.ToString("yyyy-MM-dd HH:mm:ss"),
-                                    EventName = eventInstance.Id == 400 ? "Configured" : (eventInstance.Id == 410 ? "Started" : $"Event {eventInstance.Id}"),
-                                    DeviceName = desc
-                                };
-                                
-                                _fullHistoryCache.Add(item);
-                            }
+                                Time = eventInstance.TimeCreated?.ToString("yyyy-MM-dd HH:mm:ss"),
+                                EventName = eventInstance.Id == 400 ? "Configured" : (eventInstance.Id == 410 ? "Started" : $"Event {eventInstance.Id}"),
+                                DeviceName = desc
+                            };
+                            
+                            _fullHistoryCache.Add(item);
 
-                            if (_fullHistoryCache.Count > 300) break; // Increased limit
+                            if (_fullHistoryCache.Count > 500) break; // Increased limit for full inventory
                         }
                     }
                 }
