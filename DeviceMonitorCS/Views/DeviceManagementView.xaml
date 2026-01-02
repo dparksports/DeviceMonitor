@@ -28,16 +28,18 @@
             <Setter Property="BorderBrush" Value="#404040"/>
         </Style>
         
-        <Style TargetType="GroupItem">
+        <Style x:Key="GroupHeaderStyle" TargetType="{x:Type GroupItem}">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type GroupItem}">
-                        <StackPanel>
-                            <Border Background="#333333" Padding="5">
-                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="White" Margin="5,0,0,0"/>
-                            </Border>
-                            <ItemsPresenter/>
-                        </StackPanel>
+                        <Expander IsExpanded="True" Background="Transparent">
+                            <Expander.Header>
+                                <Border Background="#2D2D30" Padding="5" CornerRadius="4" Margin="0,2">
+                                     <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="White" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                </Border>
+                            </Expander.Header>
+                            <ItemsPresenter />
+                        </Expander>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>

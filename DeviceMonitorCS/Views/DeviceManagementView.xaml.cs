@@ -9,6 +9,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Data;
+using System.Xml.Linq;
 
 namespace DeviceMonitorCS.Views
 {
@@ -83,13 +84,12 @@ namespace DeviceMonitorCS.Views
             SelectedDeviceText.Text = $"(Events for {device.Name})";
             
             // Filter Logic: Check if Event DeviceName contains parts of the Inventory Device Name or ID
-            // Often the log name is friendly, sometimes it is the Device ID.
-            // We'll try to match loosely.
+            // PRIORITIZE precise Device ID matching from XML data
             
             var relevant = _fullHistoryCache.Where(h => 
-                h.DeviceName.Contains(device.Name, StringComparison.OrdinalIgnoreCase) || 
-                (device.DeviceId != null && h.DeviceName.Contains(device.DeviceId, StringComparison.OrdinalIgnoreCase)) ||
-                (device.Manufacturer != null && h.DeviceName.Contains(device.Manufacturer, StringComparison.OrdinalIgnoreCase))
+                (!string.IsNullOrEmpty(device.DeviceId) && !string.IsNullOrEmpty(h.DeviceId) && string.Equals(device.DeviceId, h.DeviceId, StringComparison.OrdinalIgnoreCase)) ||
+                (string.IsNullOrEmpty(h.DeviceId) && h.DeviceName.Contains(device.Name, StringComparison.OrdinalIgnoreCase)) || 
+                (device.DeviceId != null && h.DeviceName.Contains(device.DeviceId, StringComparison.OrdinalIgnoreCase))
             ).ToList();
 
             foreach (var r in relevant)
@@ -112,12 +112,14 @@ namespace DeviceMonitorCS.Views
                 try
                 {
                     // Fetch ALL PnP Devices
-                    using (var searcher = new ManagementObjectSearcher("SELECT Name, Manufacturer, DeviceID, PNPClass, Present, Status FROM Win32_PnPEntity"))
+                    using (var searcher = new ManagementObjectSearcher("SELECT Name, Manufacturer, DeviceID, PNPClass, ClassGuid, Present, Status FROM Win32_PnPEntity"))
                     {
                         foreach (var device in searcher.Get())
                         {
                             string pnpClass = device["PNPClass"]?.ToString();
                             if (string.IsNullOrEmpty(pnpClass)) pnpClass = "Uncategorized";
+
+                            string classGuid = device["ClassGuid"]?.ToString()?.ToUpper() ?? "";
 
                             bool present = (bool)(device["Present"] ?? false);
                             
@@ -139,11 +141,17 @@ namespace DeviceMonitorCS.Views
                                 InventoryList.Add(item);
                                 
                                 // Filter for Input Devices (Keyboard, Mouse, Monitor)
-                                // Standard classes: Keyboard, Mouse, Monitor, Display
+                                // Standard classes: Keyboard, Mouse, Monitor, Display, HIDClass, Media
+                                // ALSO check ClassGuid for robustness
+                                
                                 bool isInput = pnpClass.Contains("Keyboard", StringComparison.OrdinalIgnoreCase) ||
                                                pnpClass.Contains("Mouse", StringComparison.OrdinalIgnoreCase) ||
                                                pnpClass.Contains("Monitor", StringComparison.OrdinalIgnoreCase) ||
-                                               pnpClass.Contains("Display", StringComparison.OrdinalIgnoreCase);
+                                               pnpClass.Contains("Display", StringComparison.OrdinalIgnoreCase) ||
+                                               pnpClass.Contains("HIDClass", StringComparison.OrdinalIgnoreCase) ||
+                                               classGuid.Contains("4D36E96B-E325-11CE-BFC1-08002BE10318") || // Keyboard
+                                               classGuid.Contains("4D36E96F-E325-11CE-BFC1-08002BE10318") || // Mouse
+                                               classGuid.Contains("4D36E96E-E325-11CE-BFC1-08002BE10318");   // Monitor
 
                                 if (isInput)
                                 {
@@ -181,8 +189,11 @@ namespace DeviceMonitorCS.Views
             {
                 try
                 {
-                    // Kernel-PnP Event IDs 400, 410, 420
-                    string query = "*[System[(EventID=400 or EventID=410)]]";
+                    // Kernel-PnP Event IDs:
+                    // 400: Configured
+                    // 410: Started (Connected)
+                    // 420: Deleted (Disconnected)
+                    string query = "*[System[(EventID=400 or EventID=410 or EventID=420)]]";
                     
                     var elq = new EventLogQuery("Microsoft-Windows-Kernel-PnP/Configuration", PathType.LogName, query) { ReverseDirection = true };
                     using (var reader = new EventLogReader(elq))
@@ -190,21 +201,49 @@ namespace DeviceMonitorCS.Views
                         EventRecord eventInstance;
                         while ((eventInstance = reader.ReadEvent()) != null)
                         {
-                            string desc = eventInstance.FormatDescription();
-                            
-                            // Broader filter: Include ALL PnP events since we track all devices now.
-                            // The Inventory selection will handle specific filtering.
-                            
-                            var item = new DeviceHistoryItem
+                            try 
                             {
-                                Time = eventInstance.TimeCreated?.ToString("yyyy-MM-dd HH:mm:ss"),
-                                EventName = eventInstance.Id == 400 ? "Configured" : (eventInstance.Id == 410 ? "Started" : $"Event {eventInstance.Id}"),
-                                DeviceName = desc
-                            };
-                            
-                            _fullHistoryCache.Add(item);
+                                int id = eventInstance.Id;
+                                string desc = eventInstance.FormatDescription();
+                                string deviceId = null;
+                                
+                                // Try parsing XML to get DeviceInstanceId
+                                try 
+                                {
+                                    string xml = eventInstance.ToXml();
+                                    var x = XElement.Parse(xml);
+                                    var dataElements = x.Descendants().Where(n => n.Name.LocalName == "Data");
+                                    foreach (var d in dataElements)
+                                    {
+                                        var nameAttr = (string)d.Attribute("Name");
+                                        if (string.Equals(nameAttr, "DeviceInstanceId", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                           deviceId = ((string)d)?.Trim();
+                                           break;
+                                        }
+                                    }
+                                }
+                                catch {} // Fallback if XML fails
 
-                            if (_fullHistoryCache.Count > 500) break; // Increased limit for full inventory
+                                string eventType = "Unknown";
+                                if (id == 400) eventType = "Configured";
+                                else if (id == 410) eventType = "Started (Connected)";
+                                else if (id == 420) eventType = "Deleted (Disconnected)";
+
+                                var item = new DeviceHistoryItem
+                                {
+                                    Time = eventInstance.TimeCreated?.ToString("yyyy-MM-dd HH:mm:ss"),
+                                    EventName = eventType,
+                                    DeviceName = desc,
+                                    EventId = id,
+                                    DeviceId = deviceId
+                                };
+                                
+                                _fullHistoryCache.Add(item);
+
+                                if (_fullHistoryCache.Count > 1000) break; // Increased capability
+                            }
+                            catch { continue; }
                         }
                     }
                 }
@@ -230,5 +269,7 @@ namespace DeviceMonitorCS.Views
         public string Time { get; set; }
         public string EventName { get; set; }
         public string DeviceName { get; set; }
+        public string DeviceId { get; set; } // For matching
+        public int EventId { get; set; } // 400, 410, 420
     }
 }
