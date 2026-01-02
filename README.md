@@ -1,7 +1,8 @@
-# Windows System Monitor (v2.4.0)
+# Windows System Monitor (v2.7.0)
 A robust C# WPF application for advanced real-time system monitoring and security enforcement.
 
-**New in v2.4.0:**
+**New in v2.7.0:**
+- **My Devices (Keyboards, Mice, Monitors):** Comprehensive history and real-time status tracking for peripheral devices using Kernel-PnP events.
 - **Privacy Dashboard Redesign:** Modern UI with toggle switches and **Tamper Protection** status monitoring.
 - **Native Device Monitoring:** Instant USB/Device detection using Windows API (`RegisterDeviceNotification`) - no more lag!
 - **Firewall Config Drift:** Detects unauthorized firewall changes and prompts to restore your saved settings instantly.
@@ -10,7 +11,7 @@ A comprehensive system utility for monitoring, managing, and securing your Windo
 
 ![Dashboard Preview](DeviceMonitorCS/shield-up-screenshot.jpg)
 
-## [Download Validated Release (v2.5.10.zip)](https://github.com/dparksports/DeviceMonitor/releases/download/v2.5.10/DeviceMonitorCS_v2.5.10.zip)
+## [Download Validated Release (v2.7.0.zip)](https://github.com/dparksports/SystemMonitor/releases/download/v2.7.0/DeviceMonitorCS_v2.7.0.zip)
 *Verified Clean - Windows Security Compliant*
 
 ## Features
@@ -50,6 +51,11 @@ A comprehensive system utility for monitoring, managing, and securing your Windo
     - **UEFI Variables**: View secure boot and other UEFI firmware variables.
     - **BIOS Info**: Detailed BIOS version and release data.
 
+### ⌨️ My Devices
+- **Peripheral Tracking**: Dedicated view for Keyboards, Mice, and Monitors.
+- **Connection History**: Detailed history of when devices were started, configured, or removed.
+- **Real-time Status**: Instant visibility of whether a device is currently connected or disconnected.
+
 ### 🛡️ Firewall Settings
 - **Rule Management**: View all Inbound and Outbound firewall rules.
 - **Toggle Rules**: Enable or disable specific rules instantly.
@@ -73,6 +79,11 @@ A comprehensive system utility for monitoring, managing, and securing your Windo
 4. The app will now start automatically when you log in.
 
 ## Release
+
+- **Version:** v2.7.0
+- **Release Date:** 2026-01-01
+- Download: [DeviceMonitorCS v2.7.0](https://github.com/dparksports/SystemMonitor/releases/tag/v2.7.0)
+
 
 - **Version:** v2.3.2
 - **Release Date:** 2026-01-01
